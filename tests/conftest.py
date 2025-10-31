@@ -1,43 +1,6 @@
 import pytest
 from unittest.mock import Mock
-
-
-class Burger:
-
-    def __init__(self):
-        self.bun = None
-        self.ingredients = []
-
-    def set_buns(self, bun):
-        self.bun = bun
-
-    def add_ingredient(self, ingredient):
-        self.ingredients.append(ingredient)
-
-    def remove_ingredient(self, index: int):
-        del self.ingredients[index]
-
-    def move_ingredient(self, index: int, new_index: int):
-        self.ingredients.insert(new_index, self.ingredients.pop(index))
-
-    def get_price(self) -> float:
-        price = self.bun.get_price() * 2
-
-        for ingredient in self.ingredients:
-            price += ingredient.get_price()
-
-        return price
-
-    def get_receipt(self) -> str:
-        receipt = [f'(==== {self.bun.get_name()} ====)']
-
-        for ingredient in self.ingredients:
-            receipt.append(f'= {str(ingredient.get_type()).lower()} {ingredient.get_name()} =')
-
-        receipt.append(f'(==== {self.bun.get_name()} ====)\n')
-        receipt.append(f'Price: {self.get_price()}')
-
-        return '\n'.join(receipt)
+from praktikum.burger import Burger  
 
 
 @pytest.fixture

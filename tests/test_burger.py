@@ -1,6 +1,12 @@
 import pytest
+import sys
+import os
 from unittest.mock import Mock
-from tests.helpers import (
+
+# Добавляем путь для импортов
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from helpers import (
     PRICE_TEST_DATA,
     RECEIPT_TEST_DATA,
     BURGER_CONFIGS

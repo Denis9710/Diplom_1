@@ -13,12 +13,12 @@ RECEIPT_TEST_DATA = [
     (
         "white bun", 
         [("SAUCE", "ketchup"), ("FILLING", "cheese")],
-        ["(==== white bun ====)", "= sauce ketchup =", "= filling cheese =", "Price: "]
+        # Цена: 100*2 + 50 + 50 = 300.0
     ),
     (
         "black bun",
         [("FILLING", "beef")],
-        ["(==== black bun ====)", "= filling beef =", "Price: "]
+        # Цена: 100*2 + 50 = 250.0
     ),
 ]
 
@@ -26,7 +26,8 @@ BURGER_CONFIGS = {
     "empty": {
         "bun_name": "basic bun",
         "bun_price": 50.0,
-        "ingredients": []
+        "ingredients": [],
+        # Цена: 50*2 = 100.0
     },
     "cheeseburger": {
         "bun_name": "sesame bun", 
@@ -34,7 +35,8 @@ BURGER_CONFIGS = {
         "ingredients": [
             {"name": "beef", "type": "FILLING", "price": 120.0},
             {"name": "cheese", "type": "FILLING", "price": 40.0}
-        ]
+        ],
+        # Цена: 80*2 + 120 + 40 = 320.0
     },
 }
 
@@ -139,8 +141,8 @@ class TestBurger:
         result_price = burger.get_price()
         assert result_price == expected_price
 
-    @pytest.mark.parametrize("bun_name,ingredient_data,expected_receipt_parts", RECEIPT_TEST_DATA)
-    def test_get_receipt(self, burger, custom_bun, custom_ingredient, bun_name, ingredient_data, expected_receipt_parts):
+    @pytest.mark.parametrize("bun_name,ingredient_data,expected_receipt_lines", RECEIPT_TEST_DATA)
+    def test_get_receipt_parametrized(self, burger, custom_bun, custom_ingredient, bun_name, ingredient_data):
         """Параметризованный тест генерации чека."""
         mock_bun = custom_bun(name=bun_name, price=100.0)
         burger.set_buns(mock_bun)
@@ -154,9 +156,20 @@ class TestBurger:
             burger.add_ingredient(mock_ingredient)
         
         receipt = burger.get_receipt()
+        receipt_lines = receipt.split('\n')
         
-        for expected_part in expected_receipt_parts:
-            assert expected_part in receipt
+        # Динамически рассчитываем ожидаемые строки
+        expected_lines = [f"(==== {bun_name} ====)"]
+        
+        for ingredient_type, ingredient_name in ingredient_data:
+            expected_lines.append(f"= {ingredient_type.lower()} {ingredient_name} =")
+        
+        expected_lines.append(f"(==== {bun_name} ====)")
+        expected_lines.append("")  # Пустая строка
+        expected_lines.append(f"Price: {burger.get_price()}")
+        
+        # Проверяем точное соответствие строк
+        assert receipt_lines == expected_lines
 
     def test_get_receipt_no_bun(self, burger):
         """Тест генерации чека без установленной булочки."""
@@ -167,11 +180,20 @@ class TestBurger:
         """Тест генерации чека бургера без ингредиентов."""
         burger.set_buns(mock_bun)
         receipt = burger.get_receipt()
+        receipt_lines = receipt.split('\n')
         
-        assert mock_bun.get_name.return_value in receipt
-        assert "Price:" in receipt
+        # Динамически рассчитываем ожидаемые строки
+        expected_price = mock_bun.get_price.return_value * 2
+        expected_lines = [
+            f"(==== {mock_bun.get_name.return_value} ====)",
+            f"(==== {mock_bun.get_name.return_value} ====)",
+            "",  # Пустая строка
+            f"Price: {expected_price}"
+        ]
+        
+        assert receipt_lines == expected_lines
 
-    def test_burger_configuration_empty(self, burger, custom_bun, custom_ingredient):
+    def test_burger_configuration_empty(self, burger, custom_bun):
         """Тест пустого бургера."""
         config = BURGER_CONFIGS["empty"]
         
@@ -182,7 +204,17 @@ class TestBurger:
         assert burger.get_price() == expected_price
         
         receipt = burger.get_receipt()
-        assert config["bun_name"] in receipt
+        receipt_lines = receipt.split('\n')
+        
+        # Динамически рассчитываем ожидаемые строки
+        expected_lines = [
+            f"(==== {config['bun_name']} ====)",
+            f"(==== {config['bun_name']} ====)",
+            "",  # Пустая строка
+            f"Price: {expected_price}"
+        ]
+        
+        assert receipt_lines == expected_lines
 
     def test_burger_configuration_cheeseburger(self, burger, custom_bun, custom_ingredient):
         """Тест чизбургера."""
@@ -204,9 +236,19 @@ class TestBurger:
         assert burger.get_price() == expected_price
         
         receipt = burger.get_receipt()
-        assert config["bun_name"] in receipt
+        receipt_lines = receipt.split('\n')
+        
+        # Динамически рассчитываем ожидаемые строки
+        expected_lines = [f"(==== {config['bun_name']} ====)"]
+        
         for ingredient_config in config["ingredients"]:
-            assert ingredient_config["name"] in receipt
+            expected_lines.append(f"= {ingredient_config['type'].lower()} {ingredient_config['name']} =")
+        
+        expected_lines.append(f"(==== {config['bun_name']} ====)")
+        expected_lines.append("")  # Пустая строка
+        expected_lines.append(f"Price: {expected_price}")
+        
+        assert receipt_lines == expected_lines
 
     def test_multiple_operations(self, burger, custom_bun, custom_ingredient):
         """Интеграционный тест нескольких операций с бургером."""
@@ -232,8 +274,18 @@ class TestBurger:
         burger.add_ingredient(mock_ingredient)
         
         receipt = burger.get_receipt()
+        receipt_lines = receipt.split('\n')
         
-        assert mock_bun.get_name.return_value in receipt
-        assert mock_ingredient.get_name.return_value in receipt
-        assert mock_ingredient.get_type.return_value.lower() in receipt
-        assert "Price:" in receipt
+        # Динамически рассчитываем ожидаемые строки
+        expected_price = mock_bun.get_price.return_value * 2 + mock_ingredient.get_price.return_value
+        expected_lines = [
+            f"(==== {mock_bun.get_name.return_value} ====)",
+            f"= {mock_ingredient.get_type.return_value.lower()} {mock_ingredient.get_name.return_value} =",
+            f"(==== {mock_bun.get_name.return_value} ====)",
+            "",  # Пустая строка
+            f"Price: {expected_price}"
+        ]
+        
+        assert receipt_lines == expected_lines
+
+        

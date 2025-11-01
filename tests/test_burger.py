@@ -12,13 +12,11 @@ PRICE_TEST_DATA = [
 RECEIPT_TEST_DATA = [
     (
         "white bun", 
-        [("SAUCE", "ketchup"), ("FILLING", "cheese")],
-        # Цена: 100*2 + 50 + 50 = 300.0
+        [("SAUCE", "ketchup"), ("FILLING", "cheese")]
     ),
     (
         "black bun",
-        [("FILLING", "beef")],
-        # Цена: 100*2 + 50 = 250.0
+        [("FILLING", "beef")]
     ),
 ]
 
@@ -27,7 +25,6 @@ BURGER_CONFIGS = {
         "bun_name": "basic bun",
         "bun_price": 50.0,
         "ingredients": [],
-        # Цена: 50*2 = 100.0
     },
     "cheeseburger": {
         "bun_name": "sesame bun", 
@@ -36,7 +33,6 @@ BURGER_CONFIGS = {
             {"name": "beef", "type": "FILLING", "price": 120.0},
             {"name": "cheese", "type": "FILLING", "price": 40.0}
         ],
-        # Цена: 80*2 + 120 + 40 = 320.0
     },
 }
 
@@ -141,7 +137,7 @@ class TestBurger:
         result_price = burger.get_price()
         assert result_price == expected_price
 
-    @pytest.mark.parametrize("bun_name,ingredient_data,expected_receipt_lines", RECEIPT_TEST_DATA)
+    @pytest.mark.parametrize("bun_name,ingredient_data", RECEIPT_TEST_DATA)
     def test_get_receipt_parametrized(self, burger, custom_bun, custom_ingredient, bun_name, ingredient_data):
         """Параметризованный тест генерации чека."""
         mock_bun = custom_bun(name=bun_name, price=100.0)
